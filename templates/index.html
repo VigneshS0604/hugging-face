@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thikse Innovative Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+            margin: 0;
+        }
+        .chat-container {
+            width: 400px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        .chat-header {
+            padding: 10px;
+            background: #007bff;
+            color: #fff;
+            text-align: center;
+        }
+        .chat-box {
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            max-width: 80%;
+        }
+        .user-message {
+            align-self: flex-end;
+            background: #007bff;
+            color: #fff;
+        }
+        .bot-message {
+            align-self: flex-start;
+            background: #e9e9eb;
+        }
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ccc;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            outline: none;
+        }
+        .chat-input button {
+            padding: 10px;
+            border: none;
+            background: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+        .flying-emoji {
+            position: absolute;
+            font-size: 24px;
+            opacity: 0;
+            animation: fly 2s forwards;
+        }
+        @keyframes fly {
+            0% {
+                bottom: 10px;
+                opacity: 1;
+                transform: translateX(0);
+            }
+            100% {
+                bottom: 200px;
+                opacity: 0;
+                transform: translateX(-200px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Thikse Innovative Chat</h2>
+        </div>
+        <div class="chat-box" id="chatBox">
+            <!-- Initial greeting message -->
+            <div class="message bot-message">Hello! How can I assist you today? 👋</div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="question" placeholder="Type your message here...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Define a mapping of words to emojis
+        const wordToEmoji = {
+            'hi': '👋',
+            'hello': '👋',
+            'goodbye': '👋',
+            'fine': '👍',
+            'happy': '😊',
+            'joke': '😄',
+            'book': '📚',
+            'bye': '👋'
+            // Add more word-to-emoji mappings as needed
+        };
+
+        async function sendMessage() {
+            const question = document.getElementById('question').value;
+            if (!question) return;
+
+            appendMessage('user-message', question);
+            document.getElementById('question').value = '';
+
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ question: question })
+            });
+            const data = await response.json();
+            appendMessage('bot-message', data.response);
+
+            // Check if the question contains any words that have corresponding emojis
+            for (const word in wordToEmoji) {
+                if (question.toLowerCase().includes(word)) {
+                    triggerEmojis(wordToEmoji[word]);
+                }
+            }
+        }
+
+        function appendMessage(className, text) {
+            const chatBox = document.getElementById('chatBox');
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${className}`;
+            messageElement.innerText = text;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function triggerEmojis(emoji) {
+            const chatBox = document.getElementById('chatBox');
+            for (let i = 0; i < 20; i++) {
+                const flyingEmoji = document.createElement('div');
+                flyingEmoji.className = 'flying-emoji';
+                flyingEmoji.innerText = emoji;
+                flyingEmoji.style.left = `${Math.random() * 100}%`;
+                flyingEmoji.style.animationDelay = `${Math.random() * 2}s`;
+
+                chatBox.appendChild(flyingEmoji);
+
+                // Remove the emoji after the animation ends
+                flyingEmoji.addEventListener('animationend', () => {
+                    flyingEmoji.remove();
+                });
+            }
+        }
+    </script>
+</body>
+</html>
